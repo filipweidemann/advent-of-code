@@ -136,7 +136,6 @@ func Part2(i []string) int {
 	for _, line := range i {
 		lc := LineCode{}
 		pairs = append(pairs, lc.FromLine(line, digitMap))
-		fmt.Printf("LC: %v, %v \n", lc.first, lc.second)
 	}
 
 	sum := 0
