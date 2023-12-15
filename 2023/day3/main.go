@@ -29,11 +29,57 @@ type Symbol struct {
 	Index  int
 }
 
+func (s *Symbol) IsGear(l []Line, d []Digit) ([]Digit, bool) {
+	// we assume equally long lines, so just grab one and get their length
+	dc := DigitCollection{Digits: d}
+
+	digits := dc.AdjacentDigitsFromSymbol(s, l)
+
+	if len(digits) == 2 {
+		return digits, true
+	}
+
+	return nil, false
+}
+
 type Digit struct {
 	LineID  int
 	Indices []int
 	Runes   []rune
 	Value   int
+}
+
+type DigitCollection struct {
+	Digits []Digit
+}
+
+func (dc DigitCollection) AdjacentDigitsFromSymbol(s *Symbol, l []Line) []Digit {
+	lineLength := len(l[0].Content)
+
+	// vertical indices
+	startLine := utils.MinWithBound(s.LineID, 0)
+	endLine := utils.MaxWithBound(s.LineID, len(l)-1)
+
+	// horizontal indices
+	startIndex := utils.MinWithBound(s.Index, 0)
+	endIndex := utils.MaxWithBound(s.Index, lineLength-1)
+
+	fmt.Println("Start Line: ", startLine)
+	fmt.Println("End Line: ", endLine)
+	fmt.Println("Start Index: ", startIndex)
+	fmt.Println("End Index: ", endIndex)
+
+	filteredDigits := new([]Digit)
+	for _, d := range dc.Digits {
+		if (d.LineID >= startLine && d.LineID <= endLine) && (d.Indices[len(d.Indices)-1] >= startIndex && d.Indices[0] <= endIndex) {
+			fmt.Printf("Found Digit for Symbol %v: Line %v, Indices %v \n", s, d.LineID, d.Indices)
+			*filteredDigits = append(*filteredDigits, d)
+		}
+	}
+
+	fmt.Println("\n\n")
+
+	return *filteredDigits
 }
 
 func (d *Digit) HasAdjacentSymbol(l []Line) bool {
@@ -43,9 +89,6 @@ func (d *Digit) HasAdjacentSymbol(l []Line) bool {
 	// vertical indices
 	startLine := utils.MinWithBound(d.LineID, 0)
 	endLine := utils.MaxWithBound(d.LineID, len(l)-1)
-
-	fmt.Println("startLine: ", startLine)
-	fmt.Println("endLine: ", endLine)
 
 	// horizontal indices
 	startIndex := utils.MinWithBound(d.Indices[0], 0)
@@ -104,8 +147,19 @@ func Part1(i []string) int {
 	return sum
 }
 
-func Part2(i []string) uint64 {
-	return 0
+func Part2(i []string) int {
+	lines := LinesFromSlice(i)
+	symbols, digits := Collect(lines)
+
+	sum := 0
+	for _, sym := range symbols {
+		digits, ok := sym.IsGear(lines, digits)
+		if ok {
+			sum += (digits[0].Value * digits[1].Value)
+		}
+	}
+
+	return sum
 }
 
 func Collect(l []Line) ([]Symbol, []Digit) {
