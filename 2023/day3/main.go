@@ -41,12 +41,15 @@ func (d *Digit) HasAdjacentSymbol(l []Line) bool {
 	lineLength := len(l[0].Content)
 
 	// vertical indices
-	startLine := utils.MinWithBound(d.LineID-1, 0)
-	endLine := utils.MaxWithBound(d.LineID+1, lineLength-1)
+	startLine := utils.MinWithBound(d.LineID, 0)
+	endLine := utils.MaxWithBound(d.LineID, len(l)-1)
+
+	fmt.Println("startLine: ", startLine)
+	fmt.Println("endLine: ", endLine)
 
 	// horizontal indices
 	startIndex := utils.MinWithBound(d.Indices[0], 0)
-	endIndex := utils.MaxWithBound(d.Indices[len(d.Indices)-1], lineLength)
+	endIndex := utils.MaxWithBound(d.Indices[len(d.Indices)-1], lineLength-1)
 
 	for i := startLine; i <= endLine; i++ {
 		for j := startIndex; j <= endIndex; j++ {
@@ -76,7 +79,7 @@ func LinesFromSlice(s []string) []Line {
 }
 
 func main() {
-	sum := Part1(testInputLines)
+	sum := Part1(inputLines)
 	fmt.Printf("Part 1: %v \n", sum)
 
 	power := Part2(inputLines)
@@ -112,7 +115,7 @@ func Collect(l []Line) ([]Symbol, []Digit) {
 	for lineIndex, line := range l {
 		digit := Digit{LineID: lineIndex}
 
-		for runeIndex, rune := range line.Content {
+		for runeIndex, rune := range line.Content + "." {
 			if unicode.IsDigit(rune) {
 				digit.Runes = append(digit.Runes, rune)
 				digit.Indices = append(digit.Indices, runeIndex)
@@ -130,17 +133,16 @@ func Collect(l []Line) ([]Symbol, []Digit) {
 			}
 
 			// If prior digit was written, determine its value and append it
-			fmt.Println("Converting runes to Str: ", string(digit.Runes))
 			value, err := strconv.Atoi(string(digit.Runes))
 			if err != nil {
 				panic("Could not parse runes to digit")
 			}
 
 			digit.Value += value
-			fmt.Println("Appending Digit: ", digit)
 			digits = append(digits, digit)
-			digit.Runes = nil
-			digit.Indices = nil
+
+			// Clear digit struct
+			digit = Digit{LineID: lineIndex}
 
 		}
 	}
