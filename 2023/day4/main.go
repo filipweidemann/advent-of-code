@@ -6,6 +6,8 @@ import (
 	"math"
 	"slices"
 	"strings"
+
+	"github.com/filipweidemann/advent-of-code/utils"
 )
 
 //go:embed input-test.txt
@@ -34,6 +36,8 @@ func main() {
 type Card struct {
 	WinningNumbers []string
 	DrawnNumbers   []string
+	Instances      uint
+	CardNumber     int
 }
 
 func (c *Card) FromLine(l string) {
@@ -63,11 +67,31 @@ func (c *Card) Worth() float64 {
 	return 0
 }
 
+func (c *Card) PayoutNextCards(cards *[]Card) {
+	worth := int(c.Worth())
+	if worth == 0 {
+		return
+	}
+
+	nextCards := utils.MaxWithBound(worth, len(*cards)-c.CardNumber)
+	fmt.Println("Evaluating Card ", c.CardNumber, " with worth ", worth)
+
+	i := 1
+	for i < nextCards {
+		if c.CardNumber < 5 {
+			fmt.Printf("Current: Card %v, has %v instances, adding %v to %v instances of next card! \n", c.CardNumber, c.Instances, c.Instances, (*cards)[c.CardNumber+i].Instances)
+		}
+		(*cards)[c.CardNumber+i].Instances += c.Instances
+		i += 1
+	}
+
+}
+
 func ParseInput(lns []string) *[]Card {
 	cards := new([]Card)
 
-	for _, l := range lns {
-		c := Card{}
+	for idx, l := range lns {
+		c := Card{Instances: 1, CardNumber: idx}
 		c.FromLine(l)
 		*cards = append(*cards, c)
 	}
@@ -86,6 +110,12 @@ func Part1(i []string) int {
 	return int(combinedWorth)
 }
 
-func Part2(i []string) int {
+func Part2(i []string) uint {
+	cards := ParseInput(i)
+
+	for _, c := range *cards {
+		c.PayoutNextCards(cards)
+	}
+
 	return 0
 }
